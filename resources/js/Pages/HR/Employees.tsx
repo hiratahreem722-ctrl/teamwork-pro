@@ -758,77 +758,97 @@ export default function Employees() {
                 open={!!viewEmp}
                 onCancel={() => setViewEmp(null)}
                 footer={null}
-                width={640}
+                width={660}
                 styles={{ body: { padding: 0 } }}
-                style={{ borderRadius: 16, overflow: 'hidden' }}
+                style={{ top: 40 }}
             >
                 {viewEmp && (() => {
-                    const cfg = statusConfig[viewEmp.status];
+                    const cfg      = statusConfig[viewEmp.status];
                     const initials = viewEmp.name.split(' ').map(n => n[0]).join('');
                     return (
-                        <div>
-                            {/* Header banner */}
-                            <div style={{ background: 'linear-gradient(135deg,#1E1B4B,#7C3AED)', padding: '28px 28px 60px', position: 'relative', overflow: 'hidden' }}>
-                                <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
-                                <div style={{ position: 'absolute', bottom: -30, left: -20, width: 130, height: 130, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
-                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 16 }}>
-                                    <div style={{ width: 64, height: 64, borderRadius: '50%', background: viewEmp.avatarColor, border: '3px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
+                        <div style={{ borderRadius: 12, overflow: 'hidden' }}>
+
+                            {/* ── Header ── */}
+                            <div style={{ background: 'linear-gradient(135deg,#1E1B4B 0%,#7C3AED 100%)', padding: '32px 32px 32px', position: 'relative', overflow: 'hidden' }}>
+                                <div style={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
+                                <div style={{ position: 'absolute', bottom: -40, left: -30, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
+                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 18 }}>
+                                    <div style={{ width: 72, height: 72, borderRadius: '50%', background: viewEmp.avatarColor, border: '3px solid rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
                                         {initials}
                                     </div>
-                                    <div>
-                                        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#fff' }}>{viewEmp.name}</h2>
-                                        <p style={{ margin: '3px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.65)' }}>{viewEmp.title} · {viewEmp.department}</p>
+                                    <div style={{ flex: 1 }}>
+                                        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>{viewEmp.name}</h2>
+                                        <p style={{ margin: '5px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>{viewEmp.title}</p>
+                                        <p style={{ margin: '2px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>{viewEmp.department} Department</p>
                                     </div>
-                                    <span style={{ marginLeft: 'auto', background: cfg.bg, color: cfg.color, borderRadius: 20, padding: '4px 14px', fontSize: 12, fontWeight: 700 }}>{viewEmp.status}</span>
+                                    <span style={{ background: cfg.bg, color: cfg.color, borderRadius: 20, padding: '5px 16px', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                                        {viewEmp.status}
+                                    </span>
                                 </div>
                             </div>
 
-                            {/* Body */}
-                            <div style={{ padding: '0 28px 28px', marginTop: -32 }}>
-                                {/* Quick stats */}
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 24 }}>
+                            {/* ── Body ── */}
+                            <div style={{ background: '#F8FAFC', padding: '24px 32px 28px' }}>
+
+                                {/* Quick stats row */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 24 }}>
                                     {[
-                                        { label: 'Projects',   value: viewEmp.projects, icon: '📁' },
-                                        { label: 'Salary',     value: viewEmp.salary,   icon: '💰' },
-                                        { label: 'Department', value: viewEmp.department, icon: '🏢' },
+                                        { label: 'Active Projects', value: viewEmp.projects, icon: '📁', color: '#7C3AED', bg: '#EDE9FE' },
+                                        { label: 'Annual Salary',   value: viewEmp.salary,   icon: '💰', color: '#059669', bg: '#DCFCE7' },
+                                        { label: 'Department',      value: viewEmp.department, icon: '🏢', color: '#2563EB', bg: '#EFF6FF' },
                                     ].map(s => (
-                                        <div key={s.label} style={{ background: '#fff', borderRadius: 12, border: '1px solid #EDE9FE', padding: '14px 16px', boxShadow: '0 1px 4px rgba(124,58,237,0.07)', textAlign: 'center' }}>
-                                            <div style={{ fontSize: 22, marginBottom: 4 }}>{s.icon}</div>
-                                            <div style={{ fontSize: 14, fontWeight: 800, color: '#1E1B4B' }}>{s.value}</div>
-                                            <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600, marginTop: 2 }}>{s.label}</div>
+                                        <div key={s.label} style={{ background: '#fff', borderRadius: 12, border: `1px solid ${s.bg}`, padding: '16px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                                            <div style={{ width: 40, height: 40, borderRadius: 10, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                                                {s.icon}
+                                            </div>
+                                            <div>
+                                                <div style={{ fontSize: 15, fontWeight: 800, color: '#1E1B4B', lineHeight: 1.2 }}>{s.value}</div>
+                                                <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600, marginTop: 2 }}>{s.label}</div>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
 
-                                {/* Details grid */}
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
-                                    {[
-                                        { label: 'Email',      value: viewEmp.email,      icon: '✉️' },
-                                        { label: 'Department', value: viewEmp.department, icon: '🏢' },
-                                        { label: 'Job Title',  value: viewEmp.title,      icon: '💼' },
-                                        { label: 'Status',     value: viewEmp.status,     icon: '🟢' },
-                                    ].map(d => (
-                                        <div key={d.label} style={{ padding: '12px 14px', background: '#FAFBFF', borderRadius: 10, border: '1px solid #EDE9FE' }}>
-                                            <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{d.icon} {d.label}</p>
-                                            <p style={{ margin: '4px 0 0', fontSize: 13, fontWeight: 600, color: '#1E1B4B' }}>{d.value}</p>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {/* Skills */}
-                                <div style={{ marginBottom: 20 }}>
-                                    <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Skills</p>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                                        {viewEmp.skills.map(s => (
-                                            <span key={s} style={{ background: '#EDE9FE', color: '#7C3AED', border: '1px solid #DDD6FE', borderRadius: 20, padding: '4px 14px', fontSize: 12, fontWeight: 600 }}>{s}</span>
+                                {/* Info grid */}
+                                <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #EDE9FE', overflow: 'hidden', marginBottom: 20 }}>
+                                    <div style={{ padding: '12px 18px', borderBottom: '1px solid #F1F5F9', background: '#FAFBFF' }}>
+                                        <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Employee Information</p>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+                                        {[
+                                            { label: 'Email Address', value: viewEmp.email,      icon: '✉️' },
+                                            { label: 'Job Title',     value: viewEmp.title,      icon: '💼' },
+                                            { label: 'Department',    value: viewEmp.department, icon: '🏢' },
+                                            { label: 'Work Status',   value: viewEmp.status,     icon: '📍' },
+                                        ].map((d, i) => (
+                                            <div key={d.label} style={{ padding: '14px 18px', borderBottom: i < 2 ? '1px solid #F8FAFC' : 'none', borderRight: i % 2 === 0 ? '1px solid #F8FAFC' : 'none' }}>
+                                                <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 5 }}>{d.icon} {d.label}</p>
+                                                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#1E1B4B' }}>{d.value}</p>
+                                            </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                {/* Footer actions */}
-                                <div style={{ display: 'flex', gap: 10, paddingTop: 16, borderTop: '1px solid #F1F5F9' }}>
-                                    <Button block style={{ borderRadius: 8, borderColor: '#EDE9FE', color: '#7C3AED', fontWeight: 600 }} onClick={() => setViewEmp(null)}>Close</Button>
-                                    <Button block type="primary" style={{ borderRadius: 8, background: 'linear-gradient(135deg,#1E1B4B,#7C3AED)', border: 'none', fontWeight: 600 }}>Edit Employee</Button>
+                                {/* Skills */}
+                                <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #EDE9FE', overflow: 'hidden', marginBottom: 24 }}>
+                                    <div style={{ padding: '12px 18px', borderBottom: '1px solid #F1F5F9', background: '#FAFBFF' }}>
+                                        <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Skills & Expertise</p>
+                                    </div>
+                                    <div style={{ padding: '16px 18px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                                        {viewEmp.skills.map(s => (
+                                            <span key={s} style={{ background: '#EDE9FE', color: '#7C3AED', border: '1px solid #DDD6FE', borderRadius: 20, padding: '5px 16px', fontSize: 12, fontWeight: 600 }}>{s}</span>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Actions */}
+                                <div style={{ display: 'flex', gap: 10 }}>
+                                    <Button block size="large" onClick={() => setViewEmp(null)} style={{ borderRadius: 9, borderColor: '#E2E8F0', color: '#64748B', fontWeight: 600, height: 42 }}>
+                                        Close
+                                    </Button>
+                                    <Button block size="large" type="primary" style={{ borderRadius: 9, background: 'linear-gradient(135deg,#1E1B4B,#7C3AED)', border: 'none', fontWeight: 600, height: 42 }}>
+                                        Edit Employee
+                                    </Button>
                                 </div>
                             </div>
                         </div>
