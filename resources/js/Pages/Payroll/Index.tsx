@@ -86,6 +86,46 @@ function Avatar({ initials, size = 32 }: { initials: string; size?: number }) {
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 function PayrollRunsTab() {
+    const [viewRun, setViewRun] = useState<typeof payrollRuns[0] | null>(null);
+
+    const empCols = [
+        {
+            title: 'EMPLOYEE',
+            render: (_: unknown, r: typeof employees[0]) => (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Avatar initials={r.avatar} size={28} />
+                    <div>
+                        <Text strong style={{ fontSize: 12, color: '#1E1B4B', display: 'block' }}>{r.name}</Text>
+                        <Text style={{ fontSize: 11, color: '#7C3AED' }}>{r.dept}</Text>
+                    </div>
+                </div>
+            ),
+        },
+        {
+            title: 'GROSS',
+            render: (_: unknown, r: typeof employees[0]) => (
+                <Text style={{ fontSize: 12 }}>{fmt(Math.round((r.base + r.bonus) / 12))}</Text>
+            ),
+        },
+        {
+            title: 'DEDUCTIONS',
+            render: (_: unknown, r: typeof employees[0]) => (
+                <Text style={{ fontSize: 12, color: '#ef4444' }}>-{fmt(Math.round(r.deductions / 12))}</Text>
+            ),
+        },
+        {
+            title: 'NET',
+            render: (_: unknown, r: typeof employees[0]) => (
+                <Text strong style={{ fontSize: 12, color: '#16A34A' }}>{fmt(Math.round(r.net / 12))}</Text>
+            ),
+        },
+        {
+            title: 'METHOD',
+            dataIndex: 'method',
+            render: (v: string) => <Text style={{ fontSize: 11, color: '#64748b' }}>{v}</Text>,
+        },
+    ];
+
     const columns = [
         {
             title: 'RUN PERIOD',
@@ -142,6 +182,7 @@ function PayrollRunsTab() {
             render: (_: unknown, r: typeof payrollRuns[0]) => (
                 <div style={{ display: 'flex', gap: 8 }}>
                     <Button size="small" icon={<Eye size={13} />}
+                        onClick={() => setViewRun(r)}
                         style={{ borderRadius: 6, fontSize: 12, borderColor: '#EDE9FE', color: '#7C3AED' }}>
                         View
                     </Button>
@@ -157,19 +198,138 @@ function PayrollRunsTab() {
     ];
 
     return (
-        <Table
-            dataSource={payrollRuns}
-            columns={columns}
-            rowKey="id"
-            pagination={false}
-            size="middle"
-            style={{ borderRadius: 12, overflow: 'hidden' }}
-            rowClassName={() => 'payroll-row'}
-        />
+        <>
+            <Table
+                dataSource={payrollRuns}
+                columns={columns}
+                rowKey="id"
+                pagination={false}
+                size="middle"
+                style={{ borderRadius: 12, overflow: 'hidden' }}
+                rowClassName={() => 'payroll-row'}
+            />
+
+            {/* ── Payroll Run Detail Modal ── */}
+            <Modal
+                open={!!viewRun}
+                onCancel={() => setViewRun(null)}
+                footer={null}
+                centered
+                width={760}
+                closeIcon={<X size={16} />}
+                styles={{ body: { padding: 0 }, header: { display: 'none' } }}
+            >
+                {viewRun && (
+                    <div>
+                        {/* Header */}
+                        <div style={{
+                            background: 'linear-gradient(135deg, #1E1B4B, #4F46E5)',
+                            borderRadius: '8px 8px 0 0', padding: '24px 28px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        }}>
+                            <div>
+                                <Text style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em',
+                                    textTransform: 'uppercase', color: '#A78BFA', display: 'block', marginBottom: 4 }}>
+                                    Payroll Run Details
+                                </Text>
+                                <Text style={{ fontSize: 20, fontWeight: 700, color: '#fff', display: 'block' }}>
+                                    {viewRun.period}
+                                </Text>
+                                <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>
+                                    Processed: {viewRun.date}
+                                </Text>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <StatusBadge status={viewRun.status} />
+                                <button onClick={() => setViewRun(null)} style={{
+                                    background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 8,
+                                    width: 32, height: 32, display: 'flex', alignItems: 'center',
+                                    justifyContent: 'center', cursor: 'pointer', color: '#fff',
+                                }}>
+                                    <X size={16} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Summary tiles */}
+                        <div style={{
+                            display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0,
+                            borderBottom: '1px solid #EDE9FE',
+                        }}>
+                            {[
+                                { label: 'Employees', value: String(viewRun.employees), color: '#7C3AED', bg: '#F5F3FF' },
+                                { label: 'Gross Pay',   value: fmt(viewRun.gross),                      color: '#3B82F6', bg: '#EFF6FF' },
+                                { label: 'Deductions',  value: viewRun.deductions != null ? fmt(viewRun.deductions) : '—', color: '#ef4444', bg: '#FEF2F2' },
+                                { label: 'Net Pay',     value: viewRun.net != null ? fmt(viewRun.net) : '—',              color: '#16A34A', bg: '#DCFCE7' },
+                            ].map((t, i) => (
+                                <div key={t.label} style={{
+                                    background: t.bg, padding: '18px 24px', textAlign: 'center',
+                                    borderRight: i < 3 ? '1px solid #EDE9FE' : 'none',
+                                }}>
+                                    <Text style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{t.label}</Text>
+                                    <Text strong style={{ fontSize: 20, color: t.color }}>{t.value}</Text>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Employee breakdown */}
+                        <div style={{ padding: '20px 24px' }}>
+                            <Text strong style={{ fontSize: 14, color: '#1E1B4B', display: 'block', marginBottom: 14 }}>
+                                Employee Breakdown
+                            </Text>
+                            <Table
+                                dataSource={employees}
+                                columns={empCols}
+                                rowKey="id"
+                                pagination={{ pageSize: 5, size: 'small' }}
+                                size="small"
+                                style={{ borderRadius: 8, overflow: 'hidden', border: '1px solid #EDE9FE' }}
+                            />
+                        </div>
+
+                        {/* Footer */}
+                        <div style={{
+                            padding: '16px 24px', borderTop: '1px solid #EDE9FE',
+                            display: 'flex', justifyContent: 'flex-end', gap: 10,
+                            background: '#FAFAFA', borderRadius: '0 0 8px 8px',
+                        }}>
+                            <Button onClick={() => setViewRun(null)} style={{ borderRadius: 8 }}>Close</Button>
+                            {viewRun.status === 'Processed' && (
+                                <Button icon={<Download size={13} />} style={{
+                                    background: 'linear-gradient(135deg, #7C3AED, #4F46E5)',
+                                    border: 'none', color: '#fff', borderRadius: 8, fontWeight: 600,
+                                }}>
+                                    Download Report
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </Modal>
+        </>
     );
 }
 
 function EmployeeSalariesTab() {
+    const [editEmp, setEditEmp] = useState<typeof employees[0] | null>(null);
+    const [editBase, setEditBase] = useState('');
+    const [editBonus, setEditBonus] = useState('');
+    const [editMethod, setEditMethod] = useState('');
+    const [saved, setSaved] = useState(false);
+
+    const openEdit = (r: typeof employees[0]) => {
+        setEditEmp(r);
+        setEditBase(String(r.base));
+        setEditBonus(String(r.bonus));
+        setEditMethod(r.method);
+        setSaved(false);
+    };
+
+    const handleSave = () => {
+        setSaved(true);
+        setTimeout(() => setEditEmp(null), 1200);
+    };
+
     const columns = [
         {
             title: 'EMPLOYEE',
@@ -224,8 +384,9 @@ function EmployeeSalariesTab() {
         },
         {
             title: 'ACTION',
-            render: () => (
+            render: (_: unknown, r: typeof employees[0]) => (
                 <Button size="small"
+                    onClick={() => openEdit(r)}
                     style={{ borderRadius: 6, fontSize: 12, borderColor: '#EDE9FE', color: '#7C3AED' }}>
                     Edit Salary
                 </Button>
@@ -234,14 +395,131 @@ function EmployeeSalariesTab() {
     ];
 
     return (
-        <Table
-            dataSource={employees}
-            columns={columns}
-            rowKey="id"
-            pagination={false}
-            size="middle"
-            style={{ borderRadius: 12, overflow: 'hidden' }}
-        />
+        <>
+            <Table
+                dataSource={employees}
+                columns={columns}
+                rowKey="id"
+                pagination={false}
+                size="middle"
+                style={{ borderRadius: 12, overflow: 'hidden' }}
+            />
+
+            {/* ── Edit Salary Modal ── */}
+            <Modal
+                open={!!editEmp}
+                onCancel={() => setEditEmp(null)}
+                footer={null}
+                centered
+                width={480}
+                closeIcon={<X size={16} />}
+                title={
+                    editEmp && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <Avatar initials={editEmp.avatar} size={40} />
+                            <div>
+                                <Text strong style={{ fontSize: 15, color: '#1E1B4B', display: 'block' }}>{editEmp.name}</Text>
+                                <Text style={{ fontSize: 12, color: '#7C3AED' }}>{editEmp.dept}</Text>
+                            </div>
+                        </div>
+                    )
+                }
+            >
+                {editEmp && (
+                    <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 18 }}>
+                        {/* Current snapshot */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                            {[
+                                { label: 'Current Net', value: fmt(editEmp.net), color: '#7C3AED', bg: '#F5F3FF' },
+                                { label: 'Deductions',  value: fmt(editEmp.deductions), color: '#ef4444', bg: '#FEF2F2' },
+                                { label: 'Last Paid',   value: editEmp.lastPaid, color: '#3B82F6', bg: '#EFF6FF' },
+                            ].map(t => (
+                                <div key={t.label} style={{ background: t.bg, borderRadius: 8, padding: '10px 12px', textAlign: 'center' }}>
+                                    <Text style={{ fontSize: 10, color: '#64748b', display: 'block', marginBottom: 2 }}>{t.label}</Text>
+                                    <Text strong style={{ fontSize: 14, color: t.color }}>{t.value}</Text>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div style={{ borderTop: '1px solid #EDE9FE', paddingTop: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                            <div>
+                                <Text style={{ fontSize: 13, fontWeight: 600, color: '#1e293b', display: 'block', marginBottom: 6 }}>Base Salary (Annual)</Text>
+                                <div style={{
+                                    display: 'flex', alignItems: 'center',
+                                    border: '1px solid #EDE9FE', borderRadius: 8, overflow: 'hidden',
+                                }}>
+                                    <span style={{ padding: '8px 12px', background: '#F5F3FF', color: '#7C3AED', fontWeight: 700, fontSize: 15 }}>$</span>
+                                    <input
+                                        type="number"
+                                        value={editBase}
+                                        onChange={e => setEditBase(e.target.value)}
+                                        style={{
+                                            flex: 1, border: 'none', outline: 'none',
+                                            padding: '8px 12px', fontSize: 14, color: '#1e293b',
+                                        }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <Text style={{ fontSize: 13, fontWeight: 600, color: '#1e293b', display: 'block', marginBottom: 6 }}>Annual Bonus</Text>
+                                <div style={{
+                                    display: 'flex', alignItems: 'center',
+                                    border: '1px solid #EDE9FE', borderRadius: 8, overflow: 'hidden',
+                                }}>
+                                    <span style={{ padding: '8px 12px', background: '#DCFCE7', color: '#16A34A', fontWeight: 700, fontSize: 15 }}>+$</span>
+                                    <input
+                                        type="number"
+                                        value={editBonus}
+                                        onChange={e => setEditBonus(e.target.value)}
+                                        style={{
+                                            flex: 1, border: 'none', outline: 'none',
+                                            padding: '8px 12px', fontSize: 14, color: '#1e293b',
+                                        }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <Text style={{ fontSize: 13, fontWeight: 600, color: '#1e293b', display: 'block', marginBottom: 6 }}>Payment Method</Text>
+                                <Select
+                                    value={editMethod}
+                                    onChange={setEditMethod}
+                                    style={{ width: '100%' }}
+                                    size="large"
+                                    options={[
+                                        { value: 'Direct Deposit', label: 'Direct Deposit' },
+                                        { value: 'Check',          label: 'Check' },
+                                        { value: 'Wire Transfer',  label: 'Wire Transfer' },
+                                    ]}
+                                />
+                            </div>
+                        </div>
+
+                        {saved && (
+                            <div style={{ background: '#DCFCE7', borderRadius: 8, border: '1px solid #BBF7D0', padding: 12, textAlign: 'center' }}>
+                                <Text strong style={{ color: '#16A34A' }}>Salary updated successfully!</Text>
+                            </div>
+                        )}
+
+                        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 4 }}>
+                            <Button onClick={() => setEditEmp(null)} style={{ borderRadius: 8 }}>Cancel</Button>
+                            <Button
+                                onClick={handleSave}
+                                disabled={saved}
+                                style={{
+                                    background: saved ? undefined : 'linear-gradient(135deg, #7C3AED, #4F46E5)',
+                                    border: 'none', color: saved ? undefined : '#fff',
+                                    borderRadius: 8, fontWeight: 600,
+                                }}
+                            >
+                                {saved ? 'Saved!' : 'Save Changes'}
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+        </>
     );
 }
 
