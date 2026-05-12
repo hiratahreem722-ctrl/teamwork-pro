@@ -1,0 +1,487 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    body {
+        font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+        background: #F5F3FF;
+        color: #1e293b;
+        -webkit-font-smoothing: antialiased;
+    }
+}
+
+/* ── Keyframes ─────────────────────────────────────────────────────────────── */
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to   { opacity: 1; transform: translateY(0);     }
+}
+
+@keyframes fadeInLeft {
+    from { opacity: 0; transform: translateX(-20px); }
+    to   { opacity: 1; transform: translateX(0);     }
+}
+
+@keyframes fadeInRight {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0);    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.92); }
+    to   { opacity: 1; transform: scale(1);    }
+}
+
+@keyframes slideInSidebar {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0);    }
+}
+
+/* Gradient blob float */
+@keyframes blobFloat {
+    0%,100% { transform: translate(0px, 0px)   scale(1);    }
+    33%      { transform: translate(20px,-15px) scale(1.06); }
+    66%      { transform: translate(-12px,10px) scale(0.96); }
+}
+
+@keyframes blobFloat2 {
+    0%,100% { transform: translate(0px, 0px)   scale(1);    }
+    33%      { transform: translate(-18px,12px) scale(1.04); }
+    66%      { transform: translate(14px,-10px) scale(0.97); }
+}
+
+/* Animated gradient background */
+@keyframes gradientShift {
+    0%,100% { background-position: 0%   50%; }
+    50%      { background-position: 100% 50%; }
+}
+
+/* Pulsing glow ring */
+@keyframes pulseGlow {
+    0%,100% { box-shadow: 0 0 0 0   rgba(124,58,237,0.4); }
+    50%      { box-shadow: 0 0 0 10px rgba(124,58,237,0);  }
+}
+
+@keyframes pulseGlowGreen {
+    0%,100% { box-shadow: 0 0 0 0  rgba(22,163,74,0.5); }
+    50%      { box-shadow: 0 0 0 8px rgba(22,163,74,0);  }
+}
+
+/* Notification badge bounce */
+@keyframes badgePop {
+    0%   { transform: scale(0); }
+    70%  { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* Shimmer / skeleton */
+@keyframes shimmer {
+    from { background-position: -400px 0; }
+    to   { background-position:  400px 0; }
+}
+
+/* Progress bar fill */
+@keyframes fillBar {
+    from { width: 0% !important; }
+    to   { width: var(--tw-width, 100%); }
+}
+
+/* Spinning loader */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* Starburst / AI sparkle */
+@keyframes sparkle {
+    0%,100% { opacity: 1; transform: scale(1)   rotate(0deg);   }
+    50%      { opacity: 0.7; transform: scale(1.2) rotate(180deg); }
+}
+
+/* Number slot-machine tick */
+@keyframes countTick {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* Typing cursor blink */
+@keyframes blink {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0; }
+}
+
+/* Alert slide-in */
+@keyframes alertSlide {
+    from { opacity: 0; transform: translateX(-12px); }
+    to   { opacity: 1; transform: translateX(0);     }
+}
+
+/* Card 3-D tilt glow */
+@keyframes cardGlow {
+    from { box-shadow: 0 1px 3px rgba(124,58,237,0.06); }
+    to   { box-shadow: 0 8px 32px rgba(124,58,237,0.18), 0 2px 8px rgba(124,58,237,0.10); }
+}
+
+/* Ripple */
+@keyframes ripple {
+    from { transform: scale(0); opacity: 0.6; }
+    to   { transform: scale(4); opacity: 0;   }
+}
+
+/* ── Animation utility classes ─────────────────────────────────────────────── */
+
+.anim-fade-up        { animation: fadeInUp    0.45s cubic-bezier(.22,.68,0,1.2) both; }
+.anim-fade-down      { animation: fadeInDown  0.4s  ease both; }
+.anim-fade-in        { animation: fadeIn      0.4s  ease both; }
+.anim-fade-left      { animation: fadeInLeft  0.4s  ease both; }
+.anim-fade-right     { animation: fadeInRight 0.4s  ease both; }
+.anim-scale-in       { animation: scaleIn     0.35s cubic-bezier(.22,.68,0,1.2) both; }
+.anim-sidebar-item   { animation: slideInSidebar 0.3s ease both; }
+
+/* Stagger helpers — apply to parent */
+.stagger-children > *                   { animation: fadeInUp 0.45s cubic-bezier(.22,.68,0,1.2) both; }
+.stagger-children > *:nth-child(1)      { animation-delay:  0ms; }
+.stagger-children > *:nth-child(2)      { animation-delay: 60ms; }
+.stagger-children > *:nth-child(3)      { animation-delay:120ms; }
+.stagger-children > *:nth-child(4)      { animation-delay:180ms; }
+.stagger-children > *:nth-child(5)      { animation-delay:240ms; }
+.stagger-children > *:nth-child(6)      { animation-delay:300ms; }
+.stagger-children > *:nth-child(7)      { animation-delay:360ms; }
+.stagger-children > *:nth-child(8)      { animation-delay:420ms; }
+
+.stagger-rows > *                       { animation: fadeInUp 0.38s ease both; }
+.stagger-rows > *:nth-child(1)          { animation-delay:  40ms; }
+.stagger-rows > *:nth-child(2)          { animation-delay:  80ms; }
+.stagger-rows > *:nth-child(3)          { animation-delay: 120ms; }
+.stagger-rows > *:nth-child(4)          { animation-delay: 160ms; }
+.stagger-rows > *:nth-child(5)          { animation-delay: 200ms; }
+.stagger-rows > *:nth-child(6)          { animation-delay: 240ms; }
+.stagger-rows > *:nth-child(7)          { animation-delay: 280ms; }
+.stagger-rows > *:nth-child(8)          { animation-delay: 320ms; }
+.stagger-rows > *:nth-child(9)          { animation-delay: 360ms; }
+.stagger-rows > *:nth-child(10)         { animation-delay: 400ms; }
+
+/* ── Reusable effect classes ──────────────────────────────────────────────── */
+
+/* Animated gradient text */
+.gradient-text {
+    background: linear-gradient(135deg, #7C3AED 0%, #A855F7 40%, #EC4899 80%, #7C3AED 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientShift 4s ease infinite;
+}
+
+/* Animated gradient button */
+.btn-gradient {
+    background: linear-gradient(135deg, #7C3AED 0%, #A855F7 50%, #7C3AED 100%);
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite;
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    transition: transform 0.15s, box-shadow 0.15s;
+    position: relative;
+    overflow: hidden;
+}
+.btn-gradient:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(124,58,237,0.4);
+}
+.btn-gradient:active {
+    transform: translateY(0);
+}
+
+/* Ripple effect on click */
+.btn-ripple {
+    position: relative;
+    overflow: hidden;
+}
+.btn-ripple::after {
+    content: '';
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    margin-top: -60px; margin-left: -60px;
+    transform: scale(0);
+    opacity: 0;
+    pointer-events: none;
+}
+.btn-ripple:active::after {
+    animation: ripple 0.5s ease-out forwards;
+}
+
+/* Glowing card on hover */
+.card-hover {
+    transition: transform 0.2s cubic-bezier(.22,.68,0,1.2), box-shadow 0.2s ease, border-color 0.2s;
+}
+.card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(124,58,237,0.14), 0 2px 8px rgba(124,58,237,0.08);
+    border-color: #C4B5FD !important;
+}
+
+/* KPI stat card — lifted glow */
+.stat-card {
+    transition: transform 0.2s cubic-bezier(.22,.68,0,1.2), box-shadow 0.2s ease;
+    cursor: default;
+}
+.stat-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 16px 48px rgba(124,58,237,0.16);
+}
+
+/* Floating blob */
+.blob-1 { animation: blobFloat  8s ease-in-out infinite; }
+.blob-2 { animation: blobFloat2 10s ease-in-out infinite; }
+.blob-3 { animation: blobFloat  12s ease-in-out infinite reverse; }
+
+/* Sparkle icon */
+.sparkle-icon { animation: sparkle 2.5s ease-in-out infinite; }
+
+/* Pulsing badge */
+.badge-pulse { animation: badgePop 0.4s cubic-bezier(.22,.68,0,1.2) both, pulseGlow 2s ease-in-out 0.4s infinite; }
+
+/* Online indicator */
+.online-dot { animation: pulseGlowGreen 2s ease-in-out infinite; }
+
+/* Sidebar link hover slide */
+.nav-link {
+    transition: background 0.15s, color 0.15s, padding-left 0.15s;
+}
+.nav-link:hover { padding-left: 18px !important; }
+
+/* Progress bar animated fill — reads --progress-width CSS variable */
+.progress-fill {
+    width: var(--progress-width, 0%);
+    animation: fillBar 1.4s cubic-bezier(.22,.68,0,1.2) both;
+}
+
+@keyframes fillBar {
+    from { clip-path: inset(0 100% 0 0); }
+    to   { clip-path: inset(0 0% 0 0); }
+}
+
+/* Table row hover */
+.table-row {
+    transition: background 0.12s, transform 0.12s;
+}
+.table-row:hover {
+    background: #FDFCFF !important;
+    transform: translateX(2px);
+}
+
+/* Shimmer skeleton */
+.skeleton {
+    background: linear-gradient(90deg, #f0eeff 25%, #e8e2ff 50%, #f0eeff 75%);
+    background-size: 400px 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+    border-radius: 8px;
+}
+
+/* Alert entrance */
+.alert-enter { animation: alertSlide 0.35s ease both; }
+.alert-enter:nth-child(1) { animation-delay:  0ms; }
+.alert-enter:nth-child(2) { animation-delay: 60ms; }
+.alert-enter:nth-child(3) { animation-delay:120ms; }
+.alert-enter:nth-child(4) { animation-delay:180ms; }
+
+/* Sidebar group items stagger */
+.sidebar-group-items > a { animation: slideInSidebar 0.3s ease both; }
+.sidebar-group-items > a:nth-child(1) { animation-delay:  0ms; }
+.sidebar-group-items > a:nth-child(2) { animation-delay: 35ms; }
+.sidebar-group-items > a:nth-child(3) { animation-delay: 70ms; }
+.sidebar-group-items > a:nth-child(4) { animation-delay:105ms; }
+.sidebar-group-items > a:nth-child(5) { animation-delay:140ms; }
+.sidebar-group-items > a:nth-child(6) { animation-delay:175ms; }
+
+/* Page wrapper fade-in */
+.page-enter { animation: fadeIn 0.35s ease both; }
+
+/* Kanban card */
+.kanban-card {
+    transition: transform 0.18s cubic-bezier(.22,.68,0,1.2), box-shadow 0.18s ease;
+}
+.kanban-card:hover {
+    transform: translateY(-4px) rotate(0.5deg);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+}
+
+/* AI glow border */
+@keyframes aiGlow {
+    0%,100% { border-color: rgba(124,58,237,0.4); box-shadow: 0 0 0 0 rgba(124,58,237,0.2); }
+    50%      { border-color: rgba(168,85,247,0.8); box-shadow: 0 0 20px 4px rgba(124,58,237,0.2); }
+}
+.ai-glow-border { animation: aiGlow 2.5s ease-in-out infinite; border: 1px solid; border-radius: 12px; }
+
+/* Typing cursor */
+.typing-cursor::after {
+    content: '|';
+    animation: blink 1s step-end infinite;
+    color: #A78BFA;
+    margin-left: 1px;
+}
+
+/* Input focus glow */
+.input-glow:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.2);
+    border-color: #7C3AED !important;
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+/* ── Sidebar / topbar responsive (plain CSS — more reliable than Tailwind on AntD) ── */
+.app-sidebar-desktop  { display: none !important; }
+.app-topbar-search    { display: none !important; }
+.app-topbar-username  { display: none !important; }
+
+@media (min-width: 640px) {
+    .app-topbar-search   { display: flex !important; }
+    .app-topbar-username { display: inline !important; }
+}
+@media (min-width: 1024px) {
+    .app-sidebar-desktop   { display: flex !important; }
+    .app-sidebar-hamburger { display: none !important; }
+}
+
+/* ── Fixed sidebar: keep sidebar pinned, offset main content ─────────────── */
+/* On desktop the Sider is position:fixed, so the sibling Layout must
+   have a matching left margin so content doesn't hide behind it.        */
+@media (min-width: 1024px) {
+    .app-main-layout { margin-left: 224px !important; }
+}
+
+/* ── Global responsive table & layout fixes ──────────────────────────────── */
+
+/* All Ant Design tables scroll on mobile */
+.ant-table-wrapper { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+.ant-table         { min-width: 500px; }
+
+/* All page header rows wrap */
+.ant-card-head { flex-wrap: wrap !important; }
+
+/* Modals full-width on mobile */
+@media (max-width: 640px) {
+    .ant-modal { max-width: calc(100vw - 24px) !important; margin: 12px auto !important; }
+}
+
+/* Auth pages — stack on mobile */
+@media (max-width: 767px) {
+    .auth-split { flex-direction: column !important; }
+    .auth-split > * { width: 100% !important; min-height: auto !important; }
+}
+
+/* ── TeamPro responsive layout — only grid/display, no visual changes ─────── */
+
+/* Content area padding */
+.content-pad { padding: 12px !important; }
+@media (min-width: 640px)  { .content-pad { padding: 16px !important; } }
+@media (min-width: 1024px) { .content-pad { padding: 24px !important; } }
+
+/* 4-col stat grid (preserves original gap values) */
+.tp-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+@media (min-width: 768px)  { .tp-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; } }
+@media (min-width: 1024px) { .tp-stats-grid { grid-template-columns: repeat(4, 1fr); gap: 14px; } }
+
+/* 6-col quick links grid */
+.tp-quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+@media (min-width: 1024px) { .tp-quick-grid { grid-template-columns: repeat(6, 1fr); gap: 10px; } }
+
+/* Main layout: content + right sidebar */
+.tp-main-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 1024px) { .tp-main-grid { grid-template-columns: 1fr 320px; gap: 20px; } }
+
+/* 3-col admin layout */
+.tp-3col-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 768px)  { .tp-3col-grid { grid-template-columns: 1fr 1fr; gap: 20px; } }
+@media (min-width: 1280px) { .tp-3col-grid { grid-template-columns: 1fr 1fr 290px; gap: 20px; } }
+
+/* ── Scrollbar ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #C4B5FD; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #7C3AED; }
+
+/* ── Ant Design overrides ─────────────────────────────────────────────────── */
+.ant-btn-primary {
+    background: linear-gradient(135deg, #7C3AED, #A855F7) !important;
+    border: none !important;
+    transition: transform 0.15s, box-shadow 0.15s !important;
+}
+.ant-btn-primary:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 20px rgba(124,58,237,0.4) !important;
+}
+.ant-btn-primary:active { transform: translateY(0) !important; }
+
+.ant-input:focus, .ant-input-focused,
+.ant-input-affix-wrapper:focus, .ant-input-affix-wrapper-focused {
+    border-color: #7C3AED !important;
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.15) !important;
+    transition: box-shadow 0.2s, border-color 0.2s !important;
+}
+
+.ant-select-focused .ant-select-selector {
+    border-color: #7C3AED !important;
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.15) !important;
+}
+
+.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn { color: #7C3AED !important; }
+.ant-tabs-ink-bar { background: #7C3AED !important; }
+
+.ant-menu-dark .ant-menu-item-selected {
+    background: rgba(167,139,250,0.18) !important;
+}
+
+.ant-modal-content { border-radius: 16px !important; overflow: hidden; }
+.ant-modal-header { border-radius: 16px 16px 0 0 !important; }
+
+/* Sidebar collapse smooth */
+.ant-layout-sider { transition: width 0.3s cubic-bezier(.22,.68,0,1.2) !important; }
+
+/* ── Login page specific ──────────────────────────────────────────────────── */
+.login-left-panel {
+    position: relative;
+    overflow: hidden;
+}
+
+.login-gradient-bg {
+    background: linear-gradient(135deg, #1E1B4B 0%, #2D1B69 40%, #1E1B4B 80%, #3B1FA8 100%);
+    background-size: 300% 300%;
+    animation: gradientShift 8s ease infinite;
+}
+
+.login-form-wrapper {
+    animation: fadeInRight 0.6s cubic-bezier(.22,.68,0,1.2) 0.2s both;
+}
+
+.login-panel-content {
+    animation: fadeInLeft 0.6s cubic-bezier(.22,.68,0,1.2) 0.1s both;
+}
+
+/* ── Dashboard specific ───────────────────────────────────────────────────── */
+.dashboard-header { animation: fadeInDown 0.45s ease both; }
+.dashboard-alerts  { animation: fadeIn    0.4s ease 0.1s both; }
+
+/* Metric value number */
+.metric-value {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+}

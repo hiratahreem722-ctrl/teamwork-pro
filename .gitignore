@@ -1,0 +1,44 @@
+# ── Environment & Secrets ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── PHP / Laravel ─────────────────────────────────────────────────────────────
+/vendor/
+/bootstrap/cache/*.php
+/storage/*.key
+Homestead.json
+Homestead.yaml
+auth.json
+npm-debug.log
+yarn-error.log
+laravel.log
+*.log
+
+# ── Node / JavaScript ─────────────────────────────────────────────────────────
+/node_modules/
+/public/build/
+/public/hot/
+
+# ── Build & Cache ─────────────────────────────────────────────────────────────
+/public/hot
+/public/storage
+/.phpunit.cache
+/.phpunit.result.cache
+.php_cs.cache
+.php-cs-fixer.cache
+
+# ── IDE & Editor ──────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── Claude / AI tooling ───────────────────────────────────────────────────────
+.claude/
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+/coverage/
