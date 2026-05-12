@@ -568,6 +568,7 @@ export default function Employees() {
     const [deptFilter, setDeptFilter] = useState<string | null>(null);
     const [statusFilter, setStatusFilter] = useState('All');
     const [modalOpen, setModalOpen]   = useState(false);
+    const [viewEmp, setViewEmp]       = useState<Employee | null>(null);
 
     const filtered = useMemo(() => employees.filter(e => {
         const matchSearch  = search === '' || e.name.toLowerCase().includes(search.toLowerCase()) || e.title.toLowerCase().includes(search.toLowerCase());
@@ -656,9 +657,9 @@ export default function Employees() {
         {
             title: 'ACTIONS',
             key: 'actions',
-            render: () => (
+            render: (_, record) => (
                 <Space>
-                    <Button size="small" style={{ color: '#7C3AED', borderColor: '#EDE9FE', borderRadius: 6, fontSize: 12 }}>View</Button>
+                    <Button size="small" onClick={() => setViewEmp(record)} style={{ color: '#7C3AED', borderColor: '#EDE9FE', borderRadius: 6, fontSize: 12 }}>View</Button>
                     <Button size="small" style={{ color: '#6B7280', borderColor: '#E5E7EB', borderRadius: 6, fontSize: 12 }}>Edit</Button>
                 </Space>
             ),
@@ -751,6 +752,89 @@ export default function Employees() {
             </div>
 
             <AddEmployeeModal open={modalOpen} onClose={() => setModalOpen(false)} deptNames={departmentNames} />
+
+            {/* ── Employee Profile Modal ── */}
+            <Modal
+                open={!!viewEmp}
+                onCancel={() => setViewEmp(null)}
+                footer={null}
+                width={640}
+                styles={{ body: { padding: 0 } }}
+                style={{ borderRadius: 16, overflow: 'hidden' }}
+            >
+                {viewEmp && (() => {
+                    const cfg = statusConfig[viewEmp.status];
+                    const initials = viewEmp.name.split(' ').map(n => n[0]).join('');
+                    return (
+                        <div>
+                            {/* Header banner */}
+                            <div style={{ background: 'linear-gradient(135deg,#1E1B4B,#7C3AED)', padding: '28px 28px 60px', position: 'relative', overflow: 'hidden' }}>
+                                <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
+                                <div style={{ position: 'absolute', bottom: -30, left: -20, width: 130, height: 130, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
+                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 16 }}>
+                                    <div style={{ width: 64, height: 64, borderRadius: '50%', background: viewEmp.avatarColor, border: '3px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
+                                        {initials}
+                                    </div>
+                                    <div>
+                                        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#fff' }}>{viewEmp.name}</h2>
+                                        <p style={{ margin: '3px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.65)' }}>{viewEmp.title} · {viewEmp.department}</p>
+                                    </div>
+                                    <span style={{ marginLeft: 'auto', background: cfg.bg, color: cfg.color, borderRadius: 20, padding: '4px 14px', fontSize: 12, fontWeight: 700 }}>{viewEmp.status}</span>
+                                </div>
+                            </div>
+
+                            {/* Body */}
+                            <div style={{ padding: '0 28px 28px', marginTop: -32 }}>
+                                {/* Quick stats */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 24 }}>
+                                    {[
+                                        { label: 'Projects',   value: viewEmp.projects, icon: '📁' },
+                                        { label: 'Salary',     value: viewEmp.salary,   icon: '💰' },
+                                        { label: 'Department', value: viewEmp.department, icon: '🏢' },
+                                    ].map(s => (
+                                        <div key={s.label} style={{ background: '#fff', borderRadius: 12, border: '1px solid #EDE9FE', padding: '14px 16px', boxShadow: '0 1px 4px rgba(124,58,237,0.07)', textAlign: 'center' }}>
+                                            <div style={{ fontSize: 22, marginBottom: 4 }}>{s.icon}</div>
+                                            <div style={{ fontSize: 14, fontWeight: 800, color: '#1E1B4B' }}>{s.value}</div>
+                                            <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600, marginTop: 2 }}>{s.label}</div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Details grid */}
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+                                    {[
+                                        { label: 'Email',      value: viewEmp.email,      icon: '✉️' },
+                                        { label: 'Department', value: viewEmp.department, icon: '🏢' },
+                                        { label: 'Job Title',  value: viewEmp.title,      icon: '💼' },
+                                        { label: 'Status',     value: viewEmp.status,     icon: '🟢' },
+                                    ].map(d => (
+                                        <div key={d.label} style={{ padding: '12px 14px', background: '#FAFBFF', borderRadius: 10, border: '1px solid #EDE9FE' }}>
+                                            <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{d.icon} {d.label}</p>
+                                            <p style={{ margin: '4px 0 0', fontSize: 13, fontWeight: 600, color: '#1E1B4B' }}>{d.value}</p>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Skills */}
+                                <div style={{ marginBottom: 20 }}>
+                                    <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Skills</p>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                                        {viewEmp.skills.map(s => (
+                                            <span key={s} style={{ background: '#EDE9FE', color: '#7C3AED', border: '1px solid #DDD6FE', borderRadius: 20, padding: '4px 14px', fontSize: 12, fontWeight: 600 }}>{s}</span>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Footer actions */}
+                                <div style={{ display: 'flex', gap: 10, paddingTop: 16, borderTop: '1px solid #F1F5F9' }}>
+                                    <Button block style={{ borderRadius: 8, borderColor: '#EDE9FE', color: '#7C3AED', fontWeight: 600 }} onClick={() => setViewEmp(null)}>Close</Button>
+                                    <Button block type="primary" style={{ borderRadius: 8, background: 'linear-gradient(135deg,#1E1B4B,#7C3AED)', border: 'none', fontWeight: 600 }}>Edit Employee</Button>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })()}
+            </Modal>
         </AppLayout>
     );
 }
