@@ -155,6 +155,13 @@ export default function Login({ status, canResetPassword }: { status?: string; c
                         </Form.Item>
                     </Form>
 
+                    <p style={{ textAlign: 'center', fontSize: 14, color: '#64748b', margin: '20px 0 0' }}>
+                        Don't have an account?{' '}
+                        <Link href={route('register')} style={{ fontWeight: 600, color: '#7C3AED' }}>
+                            Create one
+                        </Link>
+                    </p>
+
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' }}>
                         <div style={{ flex: 1, height: 1, background: '#E2E8F0' }} />
                         <span style={{ fontSize: 12, color: '#94A3B8' }}>demo accounts</span>
