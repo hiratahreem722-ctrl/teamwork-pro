@@ -49,7 +49,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/projects/{id}',  [ProjectController::class, 'destroy'])->name('projects.destroy');
 
     // ── Clients ──────────────────────────────────────────────────────────────
-    Route::get('/clients',           [ClientController::class, 'index'])->name('clients.index');
+    Route::get('/clients', function () {
+        $owner = auth()->user();
+        $ownerId = $owner->role === 'owner' ? $owner->id : ($owner->invited_by ?? $owner->id);
+        $dbClients = \App\Models\User::where('invited_by', $ownerId)
+            ->where('role', 'client')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn($u) => [
+                'id'         => $u->id,
+                'name'       => $u->name,
+                'email'      => $u->email,
+                'phone'      => $u->phone ?? '—',
+                'company'    => $u->department ?? '—',
+                'created_at' => $u->created_at->format('M d, Y'),
+            ]);
+        return Inertia::render('Clients/Index', ['dbClients' => $dbClients]);
+    })->name('clients.index');
     Route::post('/clients',          [ClientController::class, 'store'])->name('clients.store');
     Route::get('/clients/{id}',      [ClientController::class, 'show'])->name('clients.show');
     Route::patch('/clients/{id}',    [ClientController::class, 'update'])->name('clients.update');

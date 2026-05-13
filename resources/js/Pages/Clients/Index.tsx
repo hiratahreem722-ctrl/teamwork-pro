@@ -1,5 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Form, Input, Select, Avatar, Progress, message } from 'antd';
 import {
     Plus, Search, ChevronDown, MoreHorizontal, Filter, SlidersHorizontal,
@@ -9,7 +9,8 @@ import {
     CreditCard, Tag as TagIcon, MessageSquare, Layers,
     Trash2, UserPlus,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import type { PageProps } from '@/types';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Client {
@@ -24,6 +25,16 @@ interface Client {
     budget: number;
     profitability: number;
     profitPct: number;
+}
+
+// DB client (from users table, role='client')
+interface DbClient {
+    id: number;
+    name: string;
+    email: string;
+    phone?: string;
+    company?: string;
+    created_at: string;
 }
 
 interface ContactRow {
@@ -454,6 +465,7 @@ export function AddClientModal({ open, onClose }: { open: boolean; onClose: () =
     const [completed, setDone]  = useState<Set<number>>(new Set());
     const [skipped, setSkipped] = useState<Set<number>>(new Set());
     const [sendInvite, setSendInvite] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
 
     // Form state
     const [personal,   setPersonal]   = useState<Record<string, string>>({});
@@ -497,26 +509,44 @@ export function AddClientModal({ open, onClose }: { open: boolean; onClose: () =
 
     const handleBack = () => { setErrors({}); setStep(s => s - 1); };
 
-    const handleSubmit = () => {
-        const clientName = company.companyName || personal.firstName || 'Client';
-        if (sendInvite && personal.email) {
-            message.success(`"${clientName}" added! Invitation sent to ${personal.email}`);
-        } else {
-            message.success(`"${clientName}" added successfully! No invitation email sent.`);
-        }
-        // Reset
+    const reset = () => {
         setStep(0); setDone(new Set()); setSkipped(new Set());
         setPersonal({}); setCompany({}); setContacts([]); setAdditional({}); setErrors({});
-        setSendInvite(true);
-        onClose();
+        setSendInvite(true); setSubmitting(false);
     };
 
-    const handleCancel = () => {
-        setStep(0); setDone(new Set()); setSkipped(new Set());
-        setPersonal({}); setCompany({}); setContacts([]); setAdditional({}); setErrors({});
-        setSendInvite(true);
-        onClose();
+    const handleSubmit = () => {
+        // Require at least first name (or company name) + email
+        const errs: Record<string, string> = {};
+        if (!personal.firstName?.trim() && !company.companyName?.trim()) errs.firstName = 'Name is required';
+        if (!personal.email?.trim()) errs.email = 'Email is required';
+        if (Object.keys(errs).length > 0) { setErrors(errs); setStep(0); return; }
+
+        setSubmitting(true);
+        const fullName = [personal.firstName, personal.lastName].filter(Boolean).join(' ') || company.companyName;
+
+        router.post(route('owner.invite.client'), {
+            name:       fullName,
+            email:      personal.email,
+            phone:      personal.phone     ?? null,
+            company:    company.companyName ?? null,
+            sendInvite,
+        }, {
+            onSuccess: () => {
+                message.success(`"${fullName}" added successfully! They can now log in as a client.`);
+                reset();
+                onClose();
+            },
+            onError: (errs) => {
+                setSubmitting(false);
+                const first = Object.values(errs)[0];
+                message.error(String(first) || 'Failed to add client.');
+                if (errs.email) setStep(0);
+            },
+        });
     };
+
+    const handleCancel = () => { reset(); onClose(); };
 
     const isLastStep  = step === STEPS.length - 1;
     const currentStep = STEPS[step];
@@ -713,9 +743,9 @@ export function AddClientModal({ open, onClose }: { open: boolean; onClose: () =
 
                             {/* Add Client — last step */}
                             {isLastStep && (
-                                <button onClick={handleSubmit}
-                                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 20px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg,#059669,#10B981)', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: 13, boxShadow: '0 4px 12px rgba(5,150,105,0.3)' }}>
-                                    <Check size={14} /> Add Client
+                                <button onClick={handleSubmit} disabled={submitting}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 20px', borderRadius: 8, border: 'none', background: submitting ? '#94a3b8' : 'linear-gradient(135deg,#059669,#10B981)', color: '#fff', cursor: submitting ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: 13, boxShadow: '0 4px 12px rgba(5,150,105,0.3)' }}>
+                                    <Check size={14} /> {submitting ? 'Saving...' : 'Add Client'}
                                 </button>
                             )}
                         </div>
@@ -740,17 +770,42 @@ function HealthBadge({ health }: { health: Client['health'] }) {
 const COL_WIDTHS = { name: 260, owner: 160, projects: 100, completion: 200, health: 130, budget: 120, profit: 140, actions: 48 };
 
 export default function ClientsIndex() {
+    const { dbClients } = usePage<PageProps<{ dbClients?: DbClient[] }>>().props;
     const [showAdd, setShowAdd]           = useState(false);
     const [search, setSearch]             = useState('');
     const [healthFilter, setHealthFilter] = useState('All');
+    const [realClients, setRealClients]   = useState<DbClient[]>(dbClients ?? []);
 
-    const filtered = clients.filter(c =>
+    useEffect(() => { setRealClients(dbClients ?? []); }, [dbClients]);
+
+    // Merge real DB clients with mock demo clients (deduplicate by name)
+    const dbNames   = new Set(realClients.map(c => c.name.toLowerCase()));
+    const mockOnly  = clients.filter(c => !dbNames.has(c.name.toLowerCase()));
+
+    // Real clients shown as proper rows at top
+    const realAsClient: Client[] = realClients.map((c, i) => ({
+        id:             c.id,
+        name:           c.company && c.company !== '—' ? c.company : c.name,
+        color:          ['#7C3AED','#3B82F6','#10B981','#F59E0B','#EF4444','#6366F1'][i % 6],
+        owner:          { name: c.name, avatar: c.name.slice(0,2).toUpperCase() },
+        projects:       0,
+        taskCompletion: 0,
+        tasksLeft:      0,
+        health:         'Not set' as const,
+        budget:         0,
+        profitability:  0,
+        profitPct:      0,
+    }));
+
+    const allClients = [...realAsClient, ...mockOnly];
+
+    const filtered = allClients.filter(c =>
         (healthFilter === 'All' || c.health === healthFilter) &&
         c.name.toLowerCase().includes(search.toLowerCase())
     );
 
-    const totalRevenue = clients.reduce((s, c) => s + c.budget,         0);
-    const totalProfit  = clients.reduce((s, c) => s + c.profitability,  0);
+    const totalRevenue = allClients.reduce((s, c) => s + c.budget,         0);
+    const totalProfit  = allClients.reduce((s, c) => s + c.profitability,  0);
 
     return (
         <AppLayout title="Clients">
@@ -762,7 +817,7 @@ export default function ClientsIndex() {
                 <div>
                     <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0F172A', margin: 0 }}>Clients</h1>
                     <p style={{ color: '#64748B', fontSize: 14, margin: '4px 0 0' }}>
-                        {clients.length} clients · {clients.reduce((s, c) => s + c.projects, 0)} total projects
+                        {allClients.length} clients · {allClients.reduce((s, c) => s + c.projects, 0)} total projects
                     </p>
                 </div>
                 <button onClick={() => setShowAdd(true)}
@@ -774,11 +829,11 @@ export default function ClientsIndex() {
             {/* Summary bar */}
             <div style={{ display: 'flex', gap: 24, marginBottom: 24, padding: '16px 24px', background: '#fff', borderRadius: 12, border: '1px solid #E9E4FF', boxShadow: '0 1px 4px rgba(124,58,237,0.06)' }}>
                 {[
-                    { label: 'Total clients', value: clients.length },
+                    { label: 'Total clients', value: allClients.length },
                     { label: 'Total budget',  value: `$${(totalRevenue / 1000).toFixed(0)}k` },
                     { label: 'Total profit',  value: `$${(totalProfit  / 1000).toFixed(0)}k`, green: true },
-                    { label: 'Healthy',       value: clients.filter(c => c.health === 'Good').length, green: true },
-                    { label: 'At risk',       value: clients.filter(c => c.health === 'At Risk' || c.health === 'Critical').length, red: true },
+                    { label: 'Healthy',       value: allClients.filter(c => c.health === 'Good').length, green: true },
+                    { label: 'At risk',       value: allClients.filter(c => c.health === 'At Risk' || c.health === 'Critical').length, red: true },
                 ].map(s => (
                     <div key={s.label} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         <span style={{ fontSize: 12, color: '#94A3B8', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</span>
