@@ -62,7 +62,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/onboarding',            fn() => Inertia::render('Onboarding/Index'))->name('onboarding');
 
     // ── Owner routes ─────────────────────────────────────────────────────────
-    Route::get('/owner/team',            fn() => Inertia::render('Owner/Team'))->name('owner.team');
+    Route::get('/owner/team', function () {
+        $owner = auth()->user();
+        $members = \App\Models\User::where('invited_by', $owner->id)
+            ->orderBy('created_at', 'desc')
+            ->get(['id','name','email','role','job_title','department','created_at'])
+            ->map(fn($u) => [
+                'id'         => $u->id,
+                'name'       => $u->name,
+                'email'      => $u->email,
+                'role'       => $u->role,
+                'job_title'  => $u->job_title,
+                'department' => $u->department,
+                'created_at' => $u->created_at->format('Y-m-d'),
+            ]);
+        return Inertia::render('Owner/Team', ['teamMembers' => $members]);
+    })->name('owner.team');
 
     // ── Team Member Management (real backend) ────────────────────────────────
     Route::get('/api/team-members',             [TeamMemberController::class, 'index'])->name('team.members');

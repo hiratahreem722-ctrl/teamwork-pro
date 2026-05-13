@@ -1,5 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
-import { Head } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import { Table, Tag, Avatar, Button, Tooltip, Popconfirm, Typography, Tabs, Empty } from 'antd';
 import { UserPlus, Mail, Crown, Users, Trash2, FolderKanban } from 'lucide-react';
 import { useState } from 'react';
@@ -22,11 +22,13 @@ const DEFAULT_DEPTS = [
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface TeamMember {
-    id:         number;
-    name:       string;
-    email:      string;
-    role:       'manager' | 'employee' | 'client';
-    created_at: string;
+    id:          number;
+    name:        string;
+    email:       string;
+    role:        'manager' | 'employee' | 'client';
+    job_title?:  string;
+    department?: string;
+    created_at:  string;
     assigned_project_ids?: number[];
 }
 
@@ -36,15 +38,9 @@ interface ProjectOption {
     status: string;
 }
 
-// ── Mock Data ─────────────────────────────────────────────────────────────────
+// ── Page Props ────────────────────────────────────────────────────────────────
 
-const initialTeam: TeamMember[] = [
-    { id: 1, name: 'Ali Raza',    email: 'ali@acmecorp.com',   role: 'manager',  created_at: '2026-01-15' },
-    { id: 2, name: 'Sara Malik',  email: 'sara@acmecorp.com',  role: 'manager',  created_at: '2026-01-15' },
-    { id: 3, name: 'Hamza Awan',  email: 'hamza@acmecorp.com', role: 'employee', created_at: '2026-02-01' },
-    { id: 4, name: 'Zara Ahmed',  email: 'zara@acmecorp.com',  role: 'employee', created_at: '2026-02-10' },
-    { id: 5, name: 'John Client', email: 'john@acmecorp.com',  role: 'client',   created_at: '2026-03-01', assigned_project_ids: [1] },
-];
+import type { PageProps } from '@/types';
 
 const mockProjects: ProjectOption[] = [
     { id: 1, name: 'Website Redesign', status: 'in_progress' },
@@ -142,7 +138,8 @@ function AssignProjectsModal({
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function OwnerTeam() {
-    const [team, setTeam]               = useState<TeamMember[]>(initialTeam);
+    const { teamMembers } = usePage<PageProps<{ teamMembers: TeamMember[]; flash?: { success?: string } }>>().props;
+    const [team, setTeam] = useState<TeamMember[]>(teamMembers ?? []);
     const [showPicker,   setShowPicker]   = useState(false);
     const [showManager,  setShowManager]  = useState(false);
     const [showEmployee, setShowEmployee] = useState(false);
@@ -161,7 +158,9 @@ export default function OwnerTeam() {
     };
 
     const handleRemove = (id: number) => {
-        setTeam(prev => prev.filter(m => m.id !== id));
+        router.delete(route('owner.invite.destroy', id), {
+            onSuccess: () => setTeam(prev => prev.filter(m => m.id !== id)),
+        });
     };
 
     const handleSaveProjects = (clientId: number, projectIds: number[]) => {
@@ -179,6 +178,11 @@ export default function OwnerTeam() {
                     <div>
                         <Text strong style={{ fontSize: 14, color: '#1e293b', display: 'block' }}>{m.name}</Text>
                         <Text type="secondary" style={{ fontSize: 12 }}>{m.email}</Text>
+                        {(m.job_title || m.department) && (
+                            <Text style={{ fontSize: 11, color: '#7C3AED', display: 'block' }}>
+                                {[m.job_title, m.department].filter(Boolean).join(' · ')}
+                            </Text>
+                        )}
                     </div>
                 </div>
             ),
