@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TeamInvitation;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -87,10 +89,14 @@ class TeamMemberController extends Controller
             'email_verified_at'=> now(),
         ]);
 
-        // TODO: send real invitation email when mail is configured
-        // if ($validated['sendInvite'] ?? true) {
-        //     Mail::to($manager->email)->send(new ManagerInvitationMail($manager, $tempPassword));
-        // }
+        if ($validated['sendInvite'] ?? true) {
+            try {
+                Mail::to($manager->email)
+                    ->send(new TeamInvitation($manager, $owner, $tempPassword, 'manager'));
+            } catch (\Exception $e) {
+                \Log::warning('Invitation email failed: ' . $e->getMessage());
+            }
+        }
 
         return back()->with('success', "Manager \"{$manager->name}\" added successfully! Temporary password: {$tempPassword}");
     }
@@ -140,7 +146,16 @@ class TeamMemberController extends Controller
             'email_verified_at'=> now(),
         ]);
 
-        return back()->with('success', "Employee \"{$employee->name}\" added successfully!");
+        if ($validated['sendInvite'] ?? true) {
+            try {
+                Mail::to($employee->email)
+                    ->send(new TeamInvitation($employee, $owner, $tempPassword, 'employee'));
+            } catch (\Exception $e) {
+                \Log::warning('Invitation email failed: ' . $e->getMessage());
+            }
+        }
+
+        return back()->with('success', "Employee \"{$employee->name}\" added successfully! Temporary password: {$tempPassword}");
     }
 
     /**
@@ -173,7 +188,16 @@ class TeamMemberController extends Controller
             'email_verified_at' => now(),
         ]);
 
-        return back()->with('success', "Client \"{$client->name}\" added successfully!");
+        if ($validated['sendInvite'] ?? true) {
+            try {
+                Mail::to($client->email)
+                    ->send(new TeamInvitation($client, $owner, $tempPassword, 'client'));
+            } catch (\Exception $e) {
+                \Log::warning('Invitation email failed: ' . $e->getMessage());
+            }
+        }
+
+        return back()->with('success', "Client \"{$client->name}\" added successfully! Temporary password: {$tempPassword}");
     }
 
     /**
