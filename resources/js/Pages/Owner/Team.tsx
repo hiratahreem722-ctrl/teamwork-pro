@@ -1,5 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, usePage, router } from '@inertiajs/react';
+import { useEffect } from 'react';
 import { Table, Tag, Avatar, Button, Tooltip, Popconfirm, Typography, Tabs, Empty } from 'antd';
 import { UserPlus, Mail, Crown, Users, Trash2, FolderKanban } from 'lucide-react';
 import { useState } from 'react';
@@ -140,6 +141,11 @@ function AssignProjectsModal({
 export default function OwnerTeam() {
     const { teamMembers } = usePage<PageProps<{ teamMembers: TeamMember[]; flash?: { success?: string } }>>().props;
     const [team, setTeam] = useState<TeamMember[]>(teamMembers ?? []);
+
+    // Sync with fresh server data after Inertia navigations (e.g. after adding a member)
+    useEffect(() => {
+        setTeam(teamMembers ?? []);
+    }, [teamMembers]);
     const [showPicker,   setShowPicker]   = useState(false);
     const [showManager,  setShowManager]  = useState(false);
     const [showEmployee, setShowEmployee] = useState(false);
