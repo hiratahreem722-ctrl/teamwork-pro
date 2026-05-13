@@ -1,4 +1,4 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import { useState, useRef } from 'react';
 import type { PageProps } from '@/types';
 import {
@@ -211,14 +211,16 @@ export default function OnboardingIndex() {
 
     const canNext: Record<number, boolean> = {
         0: true,
-        1: !!companyName.trim() && !!industry && !!companySize,
-        2: !!workType,
-        3: goals.length > 0,
-        4: !!timezone && !!pmView,
-        5: true,   // optional
-        6: true,   // optional
+        1: true,   // company info optional
+        2: true,   // work type optional
+        3: true,   // goals optional
+        4: true,   // preferences optional
+        5: true,   // branding optional
+        6: true,   // invites optional
         7: true,
     };
+
+    const [saving, setSaving] = useState(false);
 
     const next = () => {
         setCompleted(p => new Set([...p, step]));
@@ -227,7 +229,26 @@ export default function OnboardingIndex() {
     };
     const back = () => { setStep(s => Math.max(s - 1, 0)); window.scrollTo(0, 0); };
     const skip = () => next();
-    const finish = () => { window.location.href = '/dashboard'; };
+
+    const finish = () => {
+        setSaving(true);
+        router.post(route('onboarding.save'), {
+            name:        companyName || (auth?.user?.name + "'s Workspace"),
+            industry:    industry    || null,
+            size:        companySize || null,
+            website:     website     || null,
+            work_style:  workType    || null,
+            departments: depts.length > 0 ? depts : null,
+            goals:       goals.length > 0 ? goals : null,
+            timezone:    timezone    || null,
+            pm_view:     pmView      || null,
+            currency:    currency    || null,
+            brand_color: brandColor  || null,
+        }, {
+            onSuccess: () => { setSaving(false); },
+            onError:   () => { setSaving(false); },
+        });
+    };
 
     const ctx = STEP_CONTEXT[step] ?? STEP_CONTEXT[0];
     const isLast     = step === STEPS.length - 1;
@@ -656,8 +677,8 @@ export default function OnboardingIndex() {
                                     </div>
                                 </div>
 
-                                <button onClick={finish} style={{ width: '100%', padding: '15px', borderRadius: 12, border: 'none', background: `linear-gradient(135deg,${PD},${P})`, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 6px 20px rgba(124,58,237,0.35)' }}>
-                                    <Rocket size={18} /> Go to My Dashboard
+                                <button onClick={finish} disabled={saving} style={{ width: '100%', padding: '15px', borderRadius: 12, border: 'none', background: saving ? '#94a3b8' : `linear-gradient(135deg,${PD},${P})`, color: '#fff', fontSize: 15, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 6px 20px rgba(124,58,237,0.35)' }}>
+                                    <Rocket size={18} /> {saving ? 'Setting up your workspace...' : 'Go to My Dashboard'}
                                 </button>
                             </div>
                         )}
