@@ -358,8 +358,6 @@ export function AddEmployeeModal({ open, onClose, deptNames }: { open: boolean; 
                     message.success(`Employee "${name}" added successfully!`);
                     resetForm();
                     onClose();
-                    // Reload the page so the new employee appears in the list
-                    router.reload({ only: ['dbEmployees'] });
                 },
                 onError: (errs) => {
                     setSubmitting(false);
