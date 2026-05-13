@@ -7,7 +7,7 @@ import {
     LogOut, Briefcase, CalendarRange, Receipt, UserCheck, DollarSign,
     TrendingUp, Target, Wallet, PieChart, Sparkles, ChevronDown,
     ChevronRight, Award, Banknote, Contact, GitBranch, LogIn, Crown,
-    CalendarOff, Rocket,
+    CalendarOff,
 } from 'lucide-react';
 import { PageProps, UserRole as Role } from '@/types';
 import { useState } from 'react';
@@ -63,7 +63,6 @@ const navByRole: Record<Role, NavGroup[]> = {
         {
             group: 'Setup',
             items: [
-                { label: 'Onboarding',       href: route('onboarding'),         icon: Rocket },
                 { label: 'Settings',         href: route('owner.settings'),     icon: Settings },
             ],
         },
