@@ -25,7 +25,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     // ── HR & People ─────────────────────────────────────────────────────────
-    Route::get('/hr/employees',          fn() => Inertia::render('HR/Employees'))->name('hr.employees');
+    Route::get('/hr/employees', function () {
+        $owner = auth()->user();
+        $dbEmployees = \App\Models\User::where('invited_by', $owner->id)
+            ->whereIn('role', ['employee', 'manager'])
+            ->orderBy('created_at', 'desc')
+            ->get(['id','name','email','role','job_title','department','phone','status','salary_amount','salary_type','currency','start_date','created_at'])
+            ->map(fn($u) => [
+                'id'          => $u->id,
+                'name'        => $u->name,
+                'email'       => $u->email,
+                'role'        => $u->role,
+                'title'       => $u->job_title ?? '—',
+                'dept'        => $u->department ?? '—',
+                'phone'       => $u->phone ?? '—',
+                'status'      => ucfirst($u->status ?? 'active'),
+                'salary'      => $u->salary_amount ? '$'.number_format($u->salary_amount, 0) : '—',
+                'startDate'   => $u->start_date ? $u->start_date->format('M d, Y') : '—',
+                'avatar'      => strtoupper(substr($u->name, 0, 2)),
+            ]);
+        return Inertia::render('HR/Employees', ['dbEmployees' => $dbEmployees]);
+    })->name('hr.employees');
     Route::get('/hr/employees/{id}',     fn($id) => Inertia::render('HR/Employees', ['employeeId' => $id]))->name('hr.employees.show');
     Route::get('/hr/departments',        fn() => Inertia::render('HR/Departments'))->name('hr.departments');
     Route::get('/hr/leave',              fn() => Inertia::render('HR/Leave'))->name('hr.leave');

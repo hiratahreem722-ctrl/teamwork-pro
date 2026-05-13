@@ -1,5 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import {
     Table, Tag, Avatar, Modal, Form, Input, Select,
     Button, Space, Tabs, Upload, message,
@@ -305,6 +305,15 @@ export function AddEmployeeModal({ open, onClose, deptNames }: { open: boolean; 
     const [currentStep, setCurrentStep] = useState(0);
     const [completed, setCompleted] = useState<Set<number>>(new Set());
     const [sendInvite, setSendInvite] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
+
+    const resetForm = () => {
+        form.resetFields();
+        setCurrentStep(0);
+        setCompleted(new Set());
+        setSendInvite(true);
+        setSubmitting(false);
+    };
 
     const handleNext = () => {
         const fieldsToValidate: Record<number, string[]> = {
@@ -324,29 +333,41 @@ export function AddEmployeeModal({ open, onClose, deptNames }: { open: boolean; 
     const handleBack = () => setCurrentStep(s => s - 1);
 
     const handleSubmit = () => {
-        form.validateFields().then(() => {
-            setCompleted(new Set([0,1,2,3,4,5]));
-            const email = form.getFieldValue('email');
-            if (sendInvite && email) {
-                message.success(`Employee added! Invitation sent to ${email}`);
-            } else {
-                message.success('Employee added successfully! No invitation email sent.');
-            }
-            form.resetFields();
-            setCurrentStep(0);
-            setCompleted(new Set());
-            setSendInvite(true);
-            onClose();
+        form.validateFields().then((values) => {
+            setSubmitting(true);
+            const name = `${values.firstName} ${values.lastName}`.trim();
+
+            router.post(route('owner.invite.employee'), {
+                firstName:    values.firstName,
+                lastName:     values.lastName,
+                email:        values.email,
+                phone:        values.phone,
+                title:        values.jobTitle,
+                department:   values.department,
+                startDate:    values.startDate,
+                employeeId:   values.employeeId,
+                workType:     values.workType,
+                salaryType:   values.salaryType,
+                salaryAmount: values.baseSalary,
+                currency:     values.currency ?? 'USD',
+                sendInvite,
+            }, {
+                onSuccess: () => {
+                    message.success(`Employee "${name}" added successfully!`);
+                    resetForm();
+                    onClose();
+                },
+                onError: (errs) => {
+                    setSubmitting(false);
+                    const firstErr = Object.values(errs)[0];
+                    message.error(String(firstErr) ?? 'Failed to add employee. Please check the form.');
+                    if (errs.email) { setCurrentStep(0); }
+                },
+            });
         }).catch(() => {});
     };
 
-    const handleCancel = () => {
-        form.resetFields();
-        setCurrentStep(0);
-        setCompleted(new Set());
-        setSendInvite(true);
-        onClose();
-    };
+    const handleCancel = () => { resetForm(); onClose(); };
 
     const stepContent = [
         <StepPersonal key="personal" form={form} />,
@@ -546,9 +567,11 @@ export function AddEmployeeModal({ open, onClose, deptNames }: { open: boolean; 
                             <Button
                                 type="primary"
                                 onClick={handleSubmit}
-                                style={{ borderRadius: 8, fontWeight: 600, background: 'linear-gradient(135deg,#059669,#10B981)', border: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
+                                loading={submitting}
+                                disabled={submitting}
+                                style={{ borderRadius: 8, fontWeight: 600, background: submitting ? '#94a3b8' : 'linear-gradient(135deg,#059669,#10B981)', border: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
                             >
-                                <Check size={14} /> Add Employee
+                                <Check size={14} /> {submitting ? 'Saving...' : 'Add Employee'}
                             </Button>
                         )}
                     </div>
@@ -560,9 +583,25 @@ export function AddEmployeeModal({ open, onClose, deptNames }: { open: boolean; 
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function Employees() {
-    const { auth } = usePage<PageProps>().props;
+    const { auth, dbEmployees } = usePage<PageProps<{ dbEmployees?: Employee[] }>>().props;
     const tenantKey = String(auth?.user?.tenant_id ?? auth?.user?.id ?? 'default');
     const { departmentNames } = useDepartments(tenantKey);
+
+    // Merge: real DB employees first, then mock demo employees (avoid duplicate emails)
+    const dbEmps: Employee[] = (dbEmployees ?? []).map((e: any) => ({
+        id:          e.id + 10000, // offset to avoid id collision with mock
+        name:        e.name,
+        title:       e.title ?? '—',
+        department:  e.dept ?? e.department ?? '—',
+        status:      e.status ?? 'Active',
+        skills:      [],
+        projects:    0,
+        salary:      e.salary ?? '—',
+        email:       e.email,
+        avatarColor: '#7C3AED',
+    }));
+    const dbEmails = new Set(dbEmps.map(e => e.email));
+    const allEmployees = [...dbEmps, ...employees.filter(e => !dbEmails.has(e.email))];
 
     const [search, setSearch]         = useState('');
     const [deptFilter, setDeptFilter] = useState<string | null>(null);
@@ -570,22 +609,22 @@ export default function Employees() {
     const [modalOpen, setModalOpen]   = useState(false);
     const [viewEmp, setViewEmp]       = useState<Employee | null>(null);
 
-    const filtered = useMemo(() => employees.filter(e => {
+    const filtered = useMemo(() => allEmployees.filter(e => {
         const matchSearch  = search === '' || e.name.toLowerCase().includes(search.toLowerCase()) || e.title.toLowerCase().includes(search.toLowerCase());
         const matchDept    = !deptFilter || e.department === deptFilter;
         const matchStatus  = statusFilter === 'All' || e.status === statusFilter;
         return matchSearch && matchDept && matchStatus;
-    }), [search, deptFilter, statusFilter]);
+    }), [search, deptFilter, statusFilter, dbEmployees]);
 
-    const totalActive  = employees.filter(e => e.status === 'Active').length;
-    const totalOnLeave = employees.filter(e => e.status === 'On Leave').length;
-    const uniqueDepts  = new Set(employees.map(e => e.department)).size;
+    const totalActive  = allEmployees.filter(e => e.status === 'Active').length;
+    const totalOnLeave = allEmployees.filter(e => e.status === 'On Leave').length;
+    const uniqueDepts  = new Set(allEmployees.map(e => e.department)).size;
 
     const summaryCards = [
-        { label: 'Total Employees', sub: 'All time',       value: employees.length, color: '#7C3AED', bg: '#F5F3FF' },
-        { label: 'Active',          sub: 'Right now',      value: totalActive,       color: '#16A34A', bg: '#DCFCE7' },
-        { label: 'On Leave',        sub: 'Today',          value: totalOnLeave,      color: '#D97706', bg: '#FEF3C7' },
-        { label: 'Departments',     sub: 'Overall',        value: uniqueDepts,       color: '#3B82F6', bg: '#EFF6FF' },
+        { label: 'Total Employees', sub: 'All time',       value: allEmployees.length, color: '#7C3AED', bg: '#F5F3FF' },
+        { label: 'Active',          sub: 'Right now',      value: totalActive,          color: '#16A34A', bg: '#DCFCE7' },
+        { label: 'On Leave',        sub: 'Today',          value: totalOnLeave,         color: '#D97706', bg: '#FEF3C7' },
+        { label: 'Departments',     sub: 'Overall',        value: uniqueDepts,          color: '#3B82F6', bg: '#EFF6FF' },
     ];
 
     const columns: ColumnsType<Employee> = [
