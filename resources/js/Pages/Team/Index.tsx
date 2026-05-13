@@ -1,5 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
-import { Head } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import { message } from 'antd';
 import {
     Plus, Mail, Trash2, FolderOpen, Users, Crown, Briefcase,
@@ -239,9 +239,10 @@ function PermissionToggle({ label, description, checked, onChange, color='#7C3AE
 }
 
 export function AddManagerModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-    const [step, setStep]           = useState(0);
-    const [completed, setCompleted] = useState<Set<number>>(new Set());
+    const [step, setStep]             = useState(0);
+    const [completed, setCompleted]   = useState<Set<number>>(new Set());
     const [sendInvite, setSendInvite] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
 
     // Form data
     const [data, setData] = useState<Record<string,string>>({});
@@ -256,6 +257,11 @@ export function AddManagerModal({ open, onClose }: { open: boolean; onClose: () 
         managePayroll:    false,
     });
     const [errors, setErrors] = useState<Record<string,string>>({});
+
+    const reset = () => {
+        setStep(0); setCompleted(new Set()); setData({}); setErrors({}); setSendInvite(true); setSubmitting(false);
+        setPerms({ approveLeave:true, viewSalaries:false, createProjects:true, inviteMembers:true, manageTimesheets:true, viewFinancials:false, setReviews:true, managePayroll:false });
+    };
 
     const set = (k: string, v: string) => { setData(d => ({ ...d, [k]: v })); setErrors(e => ({ ...e, [k]: '' })); };
     const togglePerm = (k: keyof typeof perms) => setPerms(p => ({ ...p, [k]: !p[k] }));
@@ -285,21 +291,32 @@ export function AddManagerModal({ open, onClose }: { open: boolean; onClose: () 
         setStep(s => s + 1);
     };
     const handleBack = () => { setErrors({}); setStep(s => s - 1); };
+
     const handleSubmit = () => {
-        const name = `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim() || 'Manager';
-        if (sendInvite && data.email) {
-            message.success(`Manager "${name}" added! Invitation sent to ${data.email}`);
-        } else {
-            message.success(`Manager "${name}" added successfully!`);
-        }
-        setStep(0); setCompleted(new Set()); setData({}); setSendInvite(true);
-        setPerms({ approveLeave:true, viewSalaries:false, createProjects:true, inviteMembers:true, manageTimesheets:true, viewFinancials:false, setReviews:true, managePayroll:false });
-        onClose();
+        setSubmitting(true);
+        const name = `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim();
+
+        router.post(route('owner.invite.manager'), {
+            ...data,
+            permissions: perms,
+            sendInvite,
+        }, {
+            onSuccess: () => {
+                message.success(`Manager "${name}" added successfully!`);
+                reset();
+                onClose();
+            },
+            onError: (errs) => {
+                setSubmitting(false);
+                const firstErr = Object.values(errs)[0];
+                message.error(firstErr ?? 'Failed to add manager. Please check the form.');
+                // Map server errors back to fields
+                if (errs.email) { setStep(0); setErrors(e => ({ ...e, email: errs.email })); }
+            },
+        });
     };
-    const handleCancel = () => {
-        setStep(0); setCompleted(new Set()); setData({}); setErrors({}); setSendInvite(true);
-        onClose();
-    };
+
+    const handleCancel = () => { reset(); onClose(); };
 
     if (!open) return null;
 
@@ -589,9 +606,9 @@ export function AddManagerModal({ open, onClose }: { open: boolean; onClose: () 
                                 Next <ChevronRight size={14} />
                             </button>
                         ) : (
-                            <button onClick={handleSubmit}
-                                style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 20px', borderRadius:8, border:'none', background:'linear-gradient(135deg,#059669,#10B981)', color:'#fff', cursor:'pointer', fontWeight:600, fontSize:13, boxShadow:'0 4px 12px rgba(5,150,105,0.3)' }}>
-                                <Check size={14} /> Add Manager
+                            <button onClick={handleSubmit} disabled={submitting}
+                                style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 20px', borderRadius:8, border:'none', background: submitting ? '#94a3b8' : 'linear-gradient(135deg,#059669,#10B981)', color:'#fff', cursor: submitting ? 'not-allowed' : 'pointer', fontWeight:600, fontSize:13, boxShadow:'0 4px 12px rgba(5,150,105,0.3)' }}>
+                                <Check size={14} /> {submitting ? 'Saving...' : 'Add Manager'}
                             </button>
                         )}
                     </div>

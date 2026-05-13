@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\S3UploadController;
+use App\Http\Controllers\TeamMemberController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -62,8 +63,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // ── Owner routes ─────────────────────────────────────────────────────────
     Route::get('/owner/team',            fn() => Inertia::render('Owner/Team'))->name('owner.team');
-    Route::post('/owner/invite',         fn() => back())->name('owner.invite');
-    Route::delete('/owner/invite/{id}',  fn($id) => back())->name('owner.invite.destroy');
+
+    // ── Team Member Management (real backend) ────────────────────────────────
+    Route::get('/api/team-members',             [TeamMemberController::class, 'index'])->name('team.members');
+    Route::post('/owner/invite/manager',        [TeamMemberController::class, 'storeManager'])->name('owner.invite.manager');
+    Route::post('/owner/invite/employee',       [TeamMemberController::class, 'storeEmployee'])->name('owner.invite.employee');
+    Route::post('/owner/invite/client',         [TeamMemberController::class, 'storeClient'])->name('owner.invite.client');
+    Route::post('/owner/invite',                [TeamMemberController::class, 'storeManager'])->name('owner.invite');
+    Route::delete('/owner/invite/{id}',         [TeamMemberController::class, 'destroy'])->name('owner.invite.destroy');
     Route::get('/owner/settings',        fn() => Inertia::render('Owner/Settings'))->name('owner.settings');
     Route::get('/owner/projects',        fn() => Inertia::render('Projects/Index'))->name('owner.projects');
     Route::get('/owner/timesheets',      fn() => Inertia::render('Timesheets/Team'))->name('owner.timesheets');

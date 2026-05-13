@@ -24,7 +24,33 @@ class User extends Authenticatable
         'password',
         'role',
         'tenant_id',
+        'job_title',
+        'department',
+        'phone',
+        'employee_id',
+        'start_date',
+        'work_type',
+        'timezone',
+        'salary_type',
+        'salary_amount',
+        'currency',
+        'pay_schedule',
+        'permissions',
+        'status',
+        'invited_by',
+        'email_verified_at',
     ];
+
+    // Relationships
+    public function inviter(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'invited_by');
+    }
+
+    public function teamMembers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(User::class, 'invited_by');
+    }
 
     public function hasRole(string $role): bool
     {
@@ -60,7 +86,10 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'start_date'        => 'date',
+            'salary_amount'     => 'decimal:2',
+            'permissions'       => 'array',
+            'password'          => 'hashed',
         ];
     }
 }
