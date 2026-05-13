@@ -84,7 +84,7 @@ function StepPersonal({ form }: { form: any }) {
             <Form.Item name="email" label="Email Address" rules={[{ required: true, type: 'email', message: 'Valid email required' }]}>
                 <Input prefix={<Mail size={13} color="#9CA3AF" />} placeholder="sara@company.com" />
             </Form.Item>
-            <Form.Item name="phone" label="Phone Number" rules={[{ required: true, message: 'Required' }]}>
+            <Form.Item name="phone" label="Phone Number">
                 <Input prefix={<Phone size={13} color="#9CA3AF" />} placeholder="+1 555 000 0000" />
             </Form.Item>
             <Form.Item name="dob" label="Date of Birth">
@@ -111,13 +111,13 @@ function StepPersonal({ form }: { form: any }) {
 function StepJob({ form, deptNames }: { form: any; deptNames: string[] }) {
     return (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px' }}>
-            <Form.Item name="jobTitle" label="Job Title" rules={[{ required: true, message: 'Required' }]}>
+            <Form.Item name="jobTitle" label="Job Title">
                 <Input prefix={<Briefcase size={13} color="#9CA3AF" />} placeholder="Senior Developer" />
             </Form.Item>
             <Form.Item name="employeeId" label="Employee ID">
                 <Input placeholder="EMP-0042" />
             </Form.Item>
-            <Form.Item name="department" label="Department" rules={[{ required: true, message: 'Required' }]}>
+            <Form.Item name="department" label="Department">
                 <Select placeholder="Select department">
                     {deptNames.map(d => <Select.Option key={d} value={d}>{d}</Select.Option>)}
                 </Select>
@@ -129,12 +129,12 @@ function StepJob({ form, deptNames }: { form: any; deptNames: string[] }) {
                     ))}
                 </Select>
             </Form.Item>
-            <Form.Item name="employmentType" label="Employment Type" rules={[{ required: true, message: 'Required' }]}>
+            <Form.Item name="employmentType" label="Employment Type">
                 <Select placeholder="Select type">
                     {['Full-time','Part-time','Contract','Intern','Freelance'].map(t => <Select.Option key={t} value={t}>{t}</Select.Option>)}
                 </Select>
             </Form.Item>
-            <Form.Item name="startDate" label="Start Date" rules={[{ required: true, message: 'Required' }]}>
+            <Form.Item name="startDate" label="Start Date">
                 <Input type="date" style={{ width: '100%' }} />
             </Form.Item>
             <Form.Item name="officeLocation" label="Office Location">
@@ -150,7 +150,7 @@ function StepJob({ form, deptNames }: { form: any; deptNames: string[] }) {
 function StepSchedule({ form }: { form: any }) {
     return (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px' }}>
-            <Form.Item name="workType" label="Work Arrangement" rules={[{ required: true, message: 'Required' }]}>
+            <Form.Item name="workType" label="Work Arrangement">
                 <Select placeholder="Select arrangement">
                     {['On-site','Remote','Hybrid'].map(t => <Select.Option key={t} value={t}>{t}</Select.Option>)}
                 </Select>
@@ -198,7 +198,7 @@ function StepSchedule({ form }: { form: any }) {
 function StepSalary({ form }: { form: any }) {
     return (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px' }}>
-            <Form.Item name="salaryType" label="Salary Type" rules={[{ required: true, message: 'Required' }]}>
+            <Form.Item name="salaryType" label="Salary Type">
                 <Select placeholder="Select type">
                     {['Annual','Monthly','Bi-weekly','Hourly'].map(t => <Select.Option key={t} value={t}>{t}</Select.Option>)}
                 </Select>
@@ -210,7 +210,7 @@ function StepSalary({ form }: { form: any }) {
                     ))}
                 </Select>
             </Form.Item>
-            <Form.Item name="baseSalary" label="Base Salary" rules={[{ required: true, message: 'Required' }]}>
+            <Form.Item name="baseSalary" label="Base Salary">
                 <Input prefix={<DollarSign size={13} color="#9CA3AF" />} placeholder="95000" type="number" />
             </Form.Item>
             <Form.Item name="payFrequency" label="Pay Frequency">
@@ -317,10 +317,10 @@ export function AddEmployeeModal({ open, onClose, deptNames }: { open: boolean; 
 
     const handleNext = () => {
         const fieldsToValidate: Record<number, string[]> = {
-            0: ['firstName','lastName','email','phone'],
-            1: ['jobTitle','department','employmentType','startDate'],
-            2: ['workType'],
-            3: ['salaryType','baseSalary'],
+            0: ['firstName','lastName','email'],
+            1: [],
+            2: [],
+            3: [],
             4: [],
             5: [],
         };
@@ -333,7 +333,9 @@ export function AddEmployeeModal({ open, onClose, deptNames }: { open: boolean; 
     const handleBack = () => setCurrentStep(s => s - 1);
 
     const handleSubmit = () => {
-        form.validateFields().then((values) => {
+        // Validate only the core required fields
+        form.validateFields(['firstName', 'lastName', 'email']).then(() => {
+            const values = form.getFieldsValue(true);
             setSubmitting(true);
             const name = `${values.firstName} ${values.lastName}`.trim();
 
@@ -341,14 +343,14 @@ export function AddEmployeeModal({ open, onClose, deptNames }: { open: boolean; 
                 firstName:    values.firstName,
                 lastName:     values.lastName,
                 email:        values.email,
-                phone:        values.phone,
-                title:        values.jobTitle,
-                department:   values.department,
-                startDate:    values.startDate,
-                employeeId:   values.employeeId,
-                workType:     values.workType,
-                salaryType:   values.salaryType,
-                salaryAmount: values.baseSalary,
+                phone:        values.phone ?? null,
+                title:        values.jobTitle ?? null,
+                department:   values.department ?? null,
+                startDate:    values.startDate ?? null,
+                employeeId:   values.employeeId ?? null,
+                workType:     values.workType ?? null,
+                salaryType:   values.salaryType ?? null,
+                salaryAmount: values.baseSalary ?? null,
                 currency:     values.currency ?? 'USD',
                 sendInvite,
             }, {
@@ -356,15 +358,20 @@ export function AddEmployeeModal({ open, onClose, deptNames }: { open: boolean; 
                     message.success(`Employee "${name}" added successfully!`);
                     resetForm();
                     onClose();
+                    // Reload the page so the new employee appears in the list
+                    router.reload({ only: ['dbEmployees'] });
                 },
                 onError: (errs) => {
                     setSubmitting(false);
                     const firstErr = Object.values(errs)[0];
-                    message.error(String(firstErr) ?? 'Failed to add employee. Please check the form.');
+                    message.error(String(firstErr) || 'Failed to add employee. Please check the form.');
                     if (errs.email) { setCurrentStep(0); }
                 },
             });
-        }).catch(() => {});
+        }).catch(() => {
+            message.warning('Please fill in the required fields (name & email) before submitting.');
+            setCurrentStep(0);
+        });
     };
 
     const handleCancel = () => { resetForm(); onClose(); };
