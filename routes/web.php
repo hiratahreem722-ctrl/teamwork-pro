@@ -25,6 +25,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ── Dashboard (role-aware) ───────────────────────────────────────────────
     Route::get('/dashboard', function () {
         $user = auth()->user();
+
+        // Owner must complete onboarding before accessing dashboard
+        if ($user->role === 'owner') {
+            $hasWorkspace = \App\Models\Workspace::where('owner_id', $user->id)->exists();
+            if (!$hasWorkspace) {
+                return redirect()->route('onboarding');
+            }
+        }
+
         $page = match($user->role) {
             'owner'       => 'Dashboard/Owner',
             'super_admin' => 'Dashboard/Admin',
@@ -37,7 +46,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     // ── Workspace / Onboarding ───────────────────────────────────────────────
-    Route::get('/onboarding',        fn() => Inertia::render('Onboarding/Index'))->name('onboarding');
+    // Only accessible to owners who haven't completed setup yet
+    Route::get('/onboarding', function () {
+        $user = auth()->user();
+        // Non-owners go straight to dashboard
+        if ($user->role !== 'owner') {
+            return redirect()->route('dashboard');
+        }
+        // Owners who already completed onboarding go to dashboard
+        $hasWorkspace = \App\Models\Workspace::where('owner_id', $user->id)->exists();
+        if ($hasWorkspace) {
+            return redirect()->route('dashboard');
+        }
+        return Inertia::render('Onboarding/Index');
+    })->name('onboarding');
     Route::post('/onboarding',       [WorkspaceController::class, 'store'])->name('onboarding.save');
     Route::get('/api/workspace',     [WorkspaceController::class, 'show'])->name('workspace.show');
 
