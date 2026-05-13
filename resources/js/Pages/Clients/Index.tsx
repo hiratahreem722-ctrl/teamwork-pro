@@ -481,15 +481,11 @@ export function AddClientModal({ open, onClose }: { open: boolean; onClose: () =
     const validate = (stepIdx: number): boolean => {
         const errs: Record<string, string> = {};
         if (stepIdx === 0) {
-            if (!personal.firstName?.trim()) errs.firstName = 'First name is required';
-            if (!personal.lastName?.trim())  errs.lastName  = 'Last name is required';
-            if (!personal.email?.trim())     errs.email     = 'Email is required';
+            if (!personal.email?.trim())     errs.email = 'Email is required';
             else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personal.email)) errs.email = 'Enter a valid email';
+            if (!personal.firstName?.trim() && !company.companyName?.trim()) errs.firstName = 'First name or company name is required';
         }
-        if (stepIdx === 1) {
-            if (!company.companyName?.trim()) errs.companyName = 'Company name is required';
-            if (!company.industry?.trim())    errs.industry    = 'Industry is required';
-        }
+        // Step 1 (Company) is optional — no required fields
         setErrors(errs);
         return Object.keys(errs).length === 0;
     };
